@@ -1,0 +1,98 @@
+name: Build
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  release:
+    types: [ published ]
+
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
+
+env:
+  BuildConfiguration: Release
+  SolutionFile: Results.sln
+
+jobs:
+  build:
+    name: "Build & Test"
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        cache: true
+        cache-dependency-path: "**/packages.lock.json"
+
+    - name: Restore
+      run: |
+          dotnet restore $SolutionFile \
+          --locked-mode
+
+    - name: Build
+      run: |
+          dotnet build $SolutionFile \
+          --no-restore \
+          --configuration $BuildConfiguration
+
+    - name: Test
+      run: |
+          dotnet test $SolutionFile \
+          --no-build \
+          --configuration $BuildConfiguration \
+          --verbosity normal \
+          --logger "trx;LogFileName=testresults.trx" \
+          --results-directory "TestResults" \
+          --collect:"XPlat Code Coverage"
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: TestResults
+        path: ${{ github.workspace }}/TestResults/testresults.trx
+        retention-days: 7
+
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2.18.0
+      if: always()
+      with:
+        trx_files: "${{ github.workspace }}/TestResults/**/*.trx"
+
+    - name: Cover 
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.4.7
+      with:
+        reports: "**/*.cobertura.xml" 
+        targetdir: "${{ github.workspace }}/coveragereport" 
+        reporttypes: "Cobertura;Badges;HtmlInline;MarkdownSummaryGithub" 
+        verbosity: "Info" 
+        title: "Code Coverage"
+        tag: "${{ github.run_number }}_${{ github.run_id }}" 
+        customSettings: "" 
+        toolpath: "reportgeneratortool"
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: CoverageReport      
+        path: "${{ github.workspace }}/coveragereport" 
+        retention-days: 7
+
+    - name: Amend 
+      if: github.event_name == 'pull_request'
+      run: gh pr comment $PR_NUMBER --body-file coveragereport/SummaryGithub.md 
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PR_NUMBER: ${{ github.event.number }}
+
+    - name: Publish Coverage Report
+      run: cat ${{ github.workspace }}/coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY 
+      shell: bash
