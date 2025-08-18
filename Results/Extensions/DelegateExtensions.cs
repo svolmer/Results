@@ -1,4 +1,5 @@
-﻿using Results.Abstractions;
+﻿using System.Diagnostics;
+using Results.Abstractions;
 
 namespace Results.Extensions
 {
@@ -11,6 +12,7 @@ namespace Results.Extensions
     ///     railway-oriented functions that return Results. These methods are used internally by the mapping operations
     ///     of the Result types.
     /// </remarks>
+    [DebuggerStepThrough]
     internal static class DelegateExtensions
     {
         /// <summary>

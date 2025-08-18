@@ -49,21 +49,6 @@ namespace Results
         }
 
         /// <summary>
-        ///     Creates a successful result without a value but with a specified value type.
-        /// </summary>
-        /// <typeparam name="TValue">
-        ///     The type of the value that would be contained in a successful result.
-        /// </typeparam>
-        /// <typeparam name="TError">
-        ///     The type of error that implements <see cref="IExceptionWrapper{TError}" />.
-        /// </typeparam>
-        /// <returns>A successful result with the specified value type but no actual value.</returns>
-        public static Result<TValue, TError> Success<TValue, TError>() where TError : class, IExceptionWrapper<TError>
-        {
-            return new Result<TValue, TError>();
-        }
-
-        /// <summary>
         ///     Creates a successful result with the specified value.
         /// </summary>
         /// <typeparam name="TValue">The type of the value contained in the result.</typeparam>
@@ -112,13 +97,13 @@ namespace Results
     ///     </para>
     /// </remarks>
     [DebuggerStepThrough]
-    public readonly struct Result<TError> : IEquatable<Result<TError>>, IComparable<Result<TError>>, IComparable
+    public class Result<TError> : IEquatable<Result<TError>>, IComparable<Result<TError>>, IComparable
         where TError : class, IExceptionWrapper<TError>
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="Result{TError}" /> struct representing a success.
         /// </summary>
-        public Result()
+        internal Result()
         {
             this.IsSuccess = true;
             this.Error = null;
@@ -286,13 +271,13 @@ namespace Results
         ///     <para>Successful results are greater than failed results.</para>
         ///     <para>Failed results are compared by the hash codes of their errors.</para>
         /// </remarks>
-        public int CompareTo(Result<TError> other)
+        public int CompareTo(Result<TError>? other)
         {
+            if (other is null) return 1;
             if (this.IsSuccess && !other.IsSuccess) return 1;
             if (!this.IsSuccess && other.IsSuccess) return -1;
             if (!this.IsSuccess && !other.IsSuccess) return this.Error.GetHashCode().CompareTo(other.Error.GetHashCode());
 
-            // if (this.IsSuccess && other.IsSuccess)
             return 0;
         }
 
@@ -306,12 +291,12 @@ namespace Results
         ///     <para>Two failed results are equal if their errors are equal.</para>
         ///     <para>A successful result and a failed result are never equal.</para>
         /// </remarks>
-        public bool Equals(Result<TError> other)
+        public bool Equals(Result<TError>? other)
         {
+            if (other is null) return false;
             if (this.IsSuccess && other.IsSuccess) return true;
             if (!this.IsSuccess && !other.IsSuccess) return EqualityComparer<TError>.Default.Equals(this.Error, other.Error);
 
-            // if ((this.IsSuccess && !other.IsSuccess) || (!this.IsSuccess && other.IsSuccess))
             return false;
         }
 
@@ -322,7 +307,7 @@ namespace Results
         /// <returns><c>true</c> if the specified object is equal to the current result; otherwise, <c>false</c>.</returns>
         public override bool Equals(object? obj)
         {
-            return obj is not null && obj is Result<TError> result && this.Equals(result);
+            return obj is Result<TError> result && this.Equals(result);
         }
 
         /// <summary>
@@ -411,21 +396,6 @@ namespace Results
         }
 
         /// <summary>
-        ///     Filters the success case based on the specified predicate.
-        /// </summary>
-        /// <param name="predicate">The predicate to apply in the success case.</param>
-        /// <returns>
-        ///     The current result if it's a failure or if the predicate returns <c>true</c>; otherwise, a new success
-        ///     result.
-        /// </returns>
-        internal Result<TError> Filter(Func<bool> predicate)
-        {
-            if (!this.IsSuccess) return this;
-
-            return predicate() ? this : Result.Success<TError>();
-        }
-
-        /// <summary>
         ///     Pattern matches on the current result, applying the appropriate function based on the result state.
         /// </summary>
         /// <typeparam name="TResult">The type of the result of the functions.</typeparam>
@@ -467,21 +437,9 @@ namespace Results
     ///     </para>
     /// </remarks>
     [DebuggerStepThrough]
-    public readonly struct Result<TValue, TError> : IEquatable<Result<TValue, TError>>, IComparable<Result<TValue, TError>>, IComparable
+    public class Result<TValue, TError> : IEquatable<Result<TValue, TError>>, IComparable<Result<TValue, TError>>, IComparable
         where TError : class, IExceptionWrapper<TError>
     {
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="Result{TValue, TError}" /> struct representing a success
-        ///     without a value.
-        /// </summary>
-        public Result()
-        {
-            this.IsSuccess = true;
-            this.HasValue = false;
-            this.Value = default;
-            this.Error = null;
-        }
-
         /// <summary>
         ///     Initializes a new instance of the <see cref="Result{TValue, TError}" /> struct representing a success
         ///     with a value.
@@ -490,7 +448,6 @@ namespace Results
         internal Result(TValue value)
         {
             this.IsSuccess = true;
-            this.HasValue = true;
             this.Value = value;
             this.Error = null;
         }
@@ -502,7 +459,6 @@ namespace Results
         internal Result(TError error)
         {
             this.IsSuccess = false;
-            this.HasValue = false;
             this.Value = default;
             this.Error = error;
         }
@@ -591,6 +547,7 @@ namespace Results
         ///     the failure.
         /// </remarks>
         [MemberNotNullWhen(false, nameof(Error))]
+        [MemberNotNullWhen(true, nameof(Value))]
         public bool IsSuccess { get; }
 
         /// <summary>
@@ -661,18 +618,13 @@ namespace Results
         ///     <para>Successful results with values are greater than successful results without values.</para>
         ///     <para>Successful results with values are compared by the values themselves.</para>
         /// </remarks>
-        public int CompareTo(Result<TValue, TError> other)
+        public int CompareTo(Result<TValue, TError>? other)
         {
+            if (other is null) return 1;
             if (this.IsSuccess && !other.IsSuccess) return 1;
             if (!this.IsSuccess && other.IsSuccess) return -1;
             if (!this.IsSuccess && !other.IsSuccess) return this.Error.GetHashCode().CompareTo(other.Error.GetHashCode());
 
-            // (this.IsSuccess && other.IsSuccess)
-            if (this.HasValue && !other.HasValue) return 1;
-            if (!this.HasValue && other.HasValue) return -1;
-            if (!this.HasValue && !other.HasValue) return 0;
-
-            // (this.HasValue && other.HasValue)
             return Comparer<TValue>.Default.Compare(this.Value, other.Value);
         }
 
@@ -688,18 +640,13 @@ namespace Results
         ///     <para>A successful result and a failed result are never equal.</para>
         ///     <para>A successful result with a value and a successful result without a value are never equal.</para>
         /// </remarks>
-        public bool Equals(Result<TValue, TError> other)
+        public bool Equals(Result<TValue, TError>? other)
         {
+            if (other is null) return false;
             if (this.IsSuccess && !other.IsSuccess) return false;
             if (!this.IsSuccess && other.IsSuccess) return false;
             if (!this.IsSuccess && !other.IsSuccess) return EqualityComparer<TError>.Default.Equals(this.Error, other.Error);
 
-            // if (this.IsSuccess && other.IsSuccess) 
-            if (this.HasValue && !other.HasValue) return false;
-            if (!this.HasValue && other.HasValue) return false;
-            if (!this.HasValue && !other.HasValue) return true;
-
-            // (this.HasValue && other.HasValue)
             return EqualityComparer<TValue>.Default.Equals(this.Value, other.Value);
         }
 
@@ -710,7 +657,7 @@ namespace Results
         /// <returns><c>true</c> if the specified object is equal to the current result; otherwise, <c>false</c>.</returns>
         public override bool Equals(object? obj)
         {
-            return obj is not null && obj is Result<TValue, TError> result && this.Equals(result);
+            return obj is Result<TValue, TError> result && this.Equals(result);
         }
 
         /// <summary>
@@ -724,7 +671,7 @@ namespace Results
         /// </remarks>
         public override int GetHashCode()
         {
-            return this.IsSuccess ? this.HasValue ? this.Value.GetHashCode() : 0 : this.Error.GetHashCode();
+            return this.IsSuccess ? this.Value.GetHashCode() : this.Error.GetHashCode();
         }
 
         /// <summary>
@@ -745,17 +692,8 @@ namespace Results
         /// </remarks>
         public override string ToString()
         {
-            return this.IsSuccess
-                ? this.HasValue ? this.Value is not null ? $"Success({this.Value})" : "Success(null)" : "Success()"
-                : $"Failure({this.Error})";
+            return this.IsSuccess ? this.Value is null ? "Success(null)" : $"Success({this.Value})" : $"Failure({this.Error})";
         }
-
-        /// <summary>
-        ///     Gets a value indicating whether the result has a value.
-        /// </summary>
-        /// <value><c>true</c> if the result has a value; otherwise, <c>false</c>.</value>
-        [MemberNotNullWhen(true, nameof(Value))]
-        internal bool HasValue { get; }
 
         /// <summary>
         ///     Gets the value contained in the result, or <c>null</c> if the result does not have a value.
@@ -781,7 +719,6 @@ namespace Results
         {
             return this.Match(
                 mapping.Execute<TValue, TError>,
-                Result.Success<TError>,
                 Result.Failure
             );
         }
@@ -800,7 +737,6 @@ namespace Results
         {
             return this.Match(
                 mapping.Execute<TValue, TResult, TError>,
-                Result.Success<TResult, TError>,
                 Result.Failure<TResult, TError>
             );
         }
@@ -818,7 +754,6 @@ namespace Results
         {
             return this.Match(
                 mapping,
-                Result.Success<TError>,
                 Result.Failure
             );
         }
@@ -838,24 +773,8 @@ namespace Results
         {
             return this.Match(
                 mapping,
-                Result.Success<TResult, TError>,
                 Result.Failure<TResult, TError>
             );
-        }
-
-        /// <summary>
-        ///     Filters the success case with a value based on the specified predicate.
-        /// </summary>
-        /// <param name="predicate">The predicate to apply in the success case with a value.</param>
-        /// <returns>
-        ///     The current result if it's a failure, a success without a value, or a success with a value where the
-        ///     predicate returns <c>true</c>; otherwise, a new success without a value.
-        /// </returns>
-        internal Result<TValue, TError> Filter(Func<TValue, bool> predicate)
-        {
-            if (!this.IsSuccess) return this;
-
-            return this.HasValue && predicate(this.Value) ? this : Result.Success<TValue, TError>();
         }
 
         /// <summary>
@@ -863,18 +782,11 @@ namespace Results
         /// </summary>
         /// <typeparam name="TResult">The type of the result of the functions.</typeparam>
         /// <param name="onSuccess">The function to apply in the success case with a value.</param>
-        /// <param name="onSuccessNoValue">The function to apply in the success case without a value.</param>
         /// <param name="onFailure">The function to apply in the failure case.</param>
         /// <returns>The result of applying the appropriate function.</returns>
-        private TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<TResult> onSuccessNoValue, Func<TError, TResult> onFailure)
+        private TResult Match<TResult>(Func<TValue, TResult> onSuccess, Func<TError, TResult> onFailure)
         {
-            if (this.IsSuccess)
-            {
-                if (this.HasValue) return onSuccess(this.Value);
-
-                return onSuccessNoValue();
-            }
-            return onFailure(this.Error);
+            return this.IsSuccess ? onSuccess(this.Value) : onFailure(this.Error);
         }
     }
 }

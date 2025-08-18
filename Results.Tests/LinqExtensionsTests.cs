@@ -48,47 +48,47 @@ namespace Results.Tests
             Result.Failure<string, Error>(Error.Unexpected).Select(_ => { }).GetErrorOrDefault().ShouldBe(Error.Unexpected);
         }
 
-        [Fact]
-        public void Result_Where()
-        {
-            Result.Success<Error>().Select(() => { }).Where(() => true).ShouldBe(Result.Success<Error>());
-            Result.Success<Error>().Select(() => { }).Where(() => false).ShouldBe(Result.Success<Error>());
+        //[Fact]
+        //public void Result_Where()
+        //{
+        //    Result.Success<Error>().Select(() => { }).Where(() => true).ShouldBe(Result.Success<Error>());
+        //    Result.Success<Error>().Select(() => { }).Where(() => false).ShouldBe(Result.Success<Error>());
 
-            Result.Failure(Error.Unexpected).Select(() => { }).Where(() => true).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-            Result.Failure(Error.Unexpected).Select(() => { }).Where(() => false).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-        }
+        //    Result.Failure(Error.Unexpected).Select(() => { }).Where(() => true).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure(Error.Unexpected).Select(() => { }).Where(() => false).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //}
 
-        [Fact]
-        public void ResultValue_Where()
-        {
-            Result.Success<int, Error>(1).Where(x => x > 0).GetValueOrDefault().ShouldBe(1);
-            Result.Success<int?, Error>(1).Where(x => x.HasValue).GetValueOrDefault().ShouldBe(1);
-            Result.Success<int?, Error>(null).Where(x => x is null).GetValueOrDefault().ShouldBe(null);
-            Result.Success<string, Error>(Constants.String1).Where(x => !string.IsNullOrEmpty(x)).GetValueOrDefault(string.Empty).ShouldBe(Constants.String1);
+        //[Fact]
+        //public void ResultValue_Where()
+        //{
+        //    Result.Success<int, Error>(1).Where(x => x > 0).GetValueOrDefault().ShouldBe(1);
+        //    Result.Success<int?, Error>(1).Where(x => x.HasValue).GetValueOrDefault().ShouldBe(1);
+        //    Result.Success<int?, Error>(null).Where(x => x is null).GetValueOrDefault().ShouldBe(null);
+        //    Result.Success<string, Error>(Constants.String1).Where(x => !string.IsNullOrEmpty(x)).GetValueOrDefault(string.Empty).ShouldBe(Constants.String1);
 
-            (from x in Result.Success<int, Error>(1) where x > 0 select x).GetValueOrDefault().ShouldBe(1);
-            (from x in Result.Success<int?, Error>(1) where x.HasValue select x).GetValueOrDefault().ShouldBe(1);
-            (from x in Result.Success<int?, Error>(null) where x is null select x).GetValueOrDefault().ShouldBe(null);
-            (from x in Result.Success<string, Error>(Constants.String1) where !string.IsNullOrEmpty(x) select x).GetValueOrDefault(string.Empty)
-                .ShouldBe(Constants.String1);
+        //    (from x in Result.Success<int, Error>(1) where x > 0 select x).GetValueOrDefault().ShouldBe(1);
+        //    (from x in Result.Success<int?, Error>(1) where x.HasValue select x).GetValueOrDefault().ShouldBe(1);
+        //    (from x in Result.Success<int?, Error>(null) where x is null select x).GetValueOrDefault().ShouldBe(null);
+        //    (from x in Result.Success<string, Error>(Constants.String1) where !string.IsNullOrEmpty(x) select x).GetValueOrDefault(string.Empty)
+        //        .ShouldBe(Constants.String1);
 
-            Result.Success<int, Error>(1).Where(x => x < 0).GetValueOrDefault(-1).ShouldBe(-1);
-            Result.Success<int?, Error>(1).Where(x => !x.HasValue).GetValueOrDefault(-1).ShouldBe(-1);
-            Result.Success<int?, Error>(null).Where(x => x is not null).GetValueOrDefault(-1).ShouldBe(-1);
-            Result.Success<string, Error>(Constants.String1).Where(x => string.IsNullOrEmpty(x)).GetValueOrDefault("None").ShouldBe("None");
+        //    Result.Success<int, Error>(1).Where(x => x < 0).GetValueOrDefault(-1).ShouldBe(-1);
+        //    Result.Success<int?, Error>(1).Where(x => !x.HasValue).GetValueOrDefault(-1).ShouldBe(-1);
+        //    Result.Success<int?, Error>(null).Where(x => x is not null).GetValueOrDefault(-1).ShouldBe(-1);
+        //    Result.Success<string, Error>(Constants.String1).Where(x => string.IsNullOrEmpty(x)).GetValueOrDefault("None").ShouldBe("None");
 
-            (from x in Result.Success<int, Error>(1) where x < 0 select x).GetValueOrDefault(-1).ShouldBe(-1);
-            (from x in Result.Success<int?, Error>(1) where !x.HasValue select x).GetValueOrDefault(-1).ShouldBe(-1);
-            (from x in Result.Success<int?, Error>(null) where x is not null select x).GetValueOrDefault(-1).ShouldBe(-1);
-            (from x in Result.Success<string, Error>(Constants.String1) where string.IsNullOrEmpty(x) select x).GetValueOrDefault("None").ShouldBe("None");
+        //    (from x in Result.Success<int, Error>(1) where x < 0 select x).GetValueOrDefault(-1).ShouldBe(-1);
+        //    (from x in Result.Success<int?, Error>(1) where !x.HasValue select x).GetValueOrDefault(-1).ShouldBe(-1);
+        //    (from x in Result.Success<int?, Error>(null) where x is not null select x).GetValueOrDefault(-1).ShouldBe(-1);
+        //    (from x in Result.Success<string, Error>(Constants.String1) where string.IsNullOrEmpty(x) select x).GetValueOrDefault("None").ShouldBe("None");
 
-            Result.Failure<int, Error>(Error.Unexpected).Where(x => x > 0).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-            Result.Failure<int?, Error>(Error.Unexpected).Where(x => x.HasValue).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-            Result.Failure<string, Error>(Error.Unexpected).Where(x => !string.IsNullOrEmpty(x)).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure<int, Error>(Error.Unexpected).Where(x => x > 0).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure<int?, Error>(Error.Unexpected).Where(x => x.HasValue).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure<string, Error>(Error.Unexpected).Where(x => !string.IsNullOrEmpty(x)).GetErrorOrDefault().ShouldBe(Error.Unexpected);
 
-            Result.Failure<int, Error>(Error.Unexpected).Where(x => x < 0).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-            Result.Failure<int?, Error>(Error.Unexpected).Where(x => !x.HasValue).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-            Result.Failure<string, Error>(Error.Unexpected).Where(x => string.IsNullOrEmpty(x)).GetErrorOrDefault().ShouldBe(Error.Unexpected);
-        }
+        //    Result.Failure<int, Error>(Error.Unexpected).Where(x => x < 0).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure<int?, Error>(Error.Unexpected).Where(x => !x.HasValue).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //    Result.Failure<string, Error>(Error.Unexpected).Where(x => string.IsNullOrEmpty(x)).GetErrorOrDefault().ShouldBe(Error.Unexpected);
+        //}
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics;
 using Results.Abstractions;
 using Results.Exceptions;
 
@@ -18,6 +18,7 @@ namespace Results.Extensions
     ///         for handling success and failure cases.
     ///     </para>
     /// </remarks>
+    [DebuggerStepThrough]
     public static class ResultExtensions
     {
         /// <summary>
@@ -99,7 +100,7 @@ namespace Results.Extensions
         public static TValue GetValueOrDefault<TValue, TError>(this Result<TValue, TError> self, TValue defaultValue = default!)
             where TError : class, IExceptionWrapper<TError>
         {
-            return self is {IsSuccess: true, HasValue: true} ? self.Value : defaultValue;
+            return self.IsSuccess ? self.Value : defaultValue;
         }
 
         /// <summary>
@@ -114,23 +115,15 @@ namespace Results.Extensions
         ///     The exception to throw if the result is a failure or a success without a value. If null, an appropriate
         ///     exception is created.
         /// </param>
-        /// <param name="callerName">The name of the caller expression, automatically provided by the compiler.</param>
         /// <returns>The value from a successful result with a value.</returns>
         /// <exception cref="Exception">
         ///     Thrown if the result is a failure (with the provided exception or an unwrapped exception from the error)
         ///     or a success without a value (with the provided exception or a <see cref="ResultValueException" />).
         /// </exception>
-        public static TValue GetValueOrThrowOnFailure<TValue, TError>(this Result<TValue, TError> self, Exception? exception = null,
-            [CallerArgumentExpression(nameof(self))]
-            string callerName = "")
+        public static TValue GetValueOrThrowOnFailure<TValue, TError>(this Result<TValue, TError> self, Exception? exception = null)
             where TError : class, IExceptionWrapper<TError>
         {
-            if (self.IsSuccess)
-            {
-                if (self.HasValue) return self.Value;
-
-                throw exception ?? new ResultValueException($"'{callerName}' has no value.");
-            }
+            if (self.IsSuccess) return self.Value;
 
             throw exception ?? TError.UnwrapException(self.Error);
         }
@@ -155,7 +148,7 @@ namespace Results.Extensions
         public static IEnumerable<TValue> Values<TValue, TError>(this Result<TValue, TError> self)
             where TError : class, IExceptionWrapper<TError>
         {
-            if (self.HasValue) yield return self.Value;
+            if (self.IsSuccess) yield return self.Value;
         }
 
         /// <summary>

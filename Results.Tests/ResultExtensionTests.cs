@@ -59,7 +59,6 @@ namespace Results.Tests
         [Fact]
         public void ResultValue_GetValueOrDefault()
         {
-            Result.Success<int, Error>().GetValueOrDefault(2).ShouldBe(2);
             Result.Success<int, Error>(1).GetValueOrDefault(2).ShouldBe(1);
             Result.Success<int?, Error>(1).GetValueOrDefault(2).ShouldBe(1);
             Result.Success<int?, Error>(null).GetValueOrDefault(2).ShouldBe(null);
@@ -74,8 +73,6 @@ namespace Results.Tests
         [Fact]
         public void ResultValue_GetValueOrThrowOnFailure()
         {
-            AssertThrow<InvalidOperationException>(() => Result.Success<int, Error>().GetValueOrThrowOnFailure(new InvalidOperationException()), true);
-
             AssertThrow<InvalidOperationException>(() => Result.Success<int, Error>(1).GetValueOrThrowOnFailure(new InvalidOperationException()), false);
             AssertThrow<InvalidOperationException>(() => Result.Success<int?, Error>(1).GetValueOrThrowOnFailure(new InvalidOperationException()), false);
             AssertThrow<InvalidOperationException>(() => Result.Success<int?, Error>(null).GetValueOrThrowOnFailure(new InvalidOperationException()), false);
@@ -93,8 +90,6 @@ namespace Results.Tests
         [Fact]
         public void ResultValue_GetValueOrThrowOnFailureFactory()
         {
-            AssertThrow<ResultValueException>(() => Result.Success<int, Error>().GetValueOrThrowOnFailure(), true);
-
             AssertThrow<ResultErrorException>(() => Result.Success<int, Error>(1).GetValueOrThrowOnFailure(), false);
             AssertThrow<ResultErrorException>(() => Result.Success<int?, Error>(1).GetValueOrThrowOnFailure(), false);
             AssertThrow<ResultErrorException>(() => Result.Success<int?, Error>(null).GetValueOrThrowOnFailure(), false);
@@ -108,7 +103,6 @@ namespace Results.Tests
         [Fact]
         public void ResultValue_Values()
         {
-            Result.Success<int, Error>().Values().ShouldBeEmpty();
             Result.Success<int, Error>(1).Values().ShouldContain(1);
             Result.Success<int?, Error>(1).Values().ShouldContain(1);
             Result.Success<int?, Error>(null).Values().ShouldContain((int?) null);
@@ -131,7 +125,6 @@ namespace Results.Tests
         [Fact]
         public void ResultValue_Errors()
         {
-            Result.Success<int, Error>().Errors().ShouldBeEmpty();
             Result.Success<int, Error>(1).Errors().ShouldBeEmpty();
             Result.Success<int?, Error>(1).Errors().ShouldBeEmpty();
             Result.Success<int?, Error>(null).Errors().ShouldBeEmpty();
@@ -169,7 +162,6 @@ namespace Results.Tests
         public void ResultValue_Flatten()
         {
             Result.Success<Result<Error>, Error>(Result.Success<Error>()).Flatten().ShouldBe(Result.Success<Error>());
-            Result.Success<Result<int, Error>, Error>(Result.Success<int, Error>()).Flatten().ShouldBe(Result.Success<int, Error>());
             Result.Success<Result<int, Error>, Error>(Result.Success<int, Error>(1)).Flatten().ShouldBe(Result.Success<int, Error>(1));
             Result.Success<Result<int?, Error>, Error>(Result.Success<int?, Error>(1)).Flatten().ShouldBe(Result.Success<int?, Error>(1));
             Result.Success<Result<int?, Error>, Error>(Result.Success<int?, Error>(null)).Flatten().ShouldBe(Result.Success<int?, Error>(null));
